@@ -1,3 +1,10 @@
+"""
+En fakturapipeline per PDF: text → AI-extraktion → normalisering/validering →
+dubblettkontroll mot tidigare körda fakturor → status (Approved / Needs review).
+
+Avsikt: AI för ostrukturerad text, regler för beslut och spårbarhet (orsakskoder).
+Körs enstaka fil via __main__ eller anropas från batch_eval med delad seen_invoices-lista.
+"""
 import json
 import os
 import re
@@ -6,6 +13,7 @@ from pathlib import Path
 try:
     from dotenv import load_dotenv
 
+    # Projektrot ligger två nivåer upp från docs/src/
     load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 except ImportError:
     pass
@@ -19,9 +27,10 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 # ---------------------------
-# 1. Extract text from PDF
+# 1. Text från PDF
 # ---------------------------
 def extract_text(file_path):
+    """Läser innehåll från PDF:ns textlager (pdfplumber, ingen OCR)."""
     text = ""
 
     with pdfplumber.open(file_path) as pdf:
@@ -34,9 +43,11 @@ def extract_text(file_path):
 
 
 # ---------------------------
-# 2. Old regex extraction (keep for reference)
+# 2. Regex-extraktion (referens, används inte i huvudflödet)
 # ---------------------------
 def extract_fields(text):
+    """Enkel mönsterbaserad extraktion — behålls för jämförelse eller felsökning."""
+
     def find(pattern, group=1):
         match = re.search(pattern, text, re.IGNORECASE)
         return match.group(group).strip() if match else None
@@ -51,9 +62,10 @@ def extract_fields(text):
 
 
 # ---------------------------
-# 3. AI extraction
+# 3. AI-extraktion
 # ---------------------------
 def extract_fields_with_ai(text):
+    """Anropar LLM med fast JSON-schema; returnerar dict med fält eller null."""
     prompt = f"""
 Extract invoice data and return ONLY valid JSON.
 
@@ -88,6 +100,7 @@ Invoice text:
 
     raw_output = response.output_text.strip()
 
+    # Modellen kan ändå wrappa JSON i ``` — rensa bort det innan parse
     if raw_output.startswith("```"):
         raw_output = raw_output.replace("```json", "").replace("```", "").strip()
 
@@ -95,18 +108,24 @@ Invoice text:
 
 
 # ---------------------------
-# 4. Helpers
+# 4. Hjälpfunktioner för jämförelse
 # ---------------------------
 def normalize_text(value):
+    """Enhetlig sträng för dubblettregler (trim + gemener)."""
     if value is None:
         return ""
     return str(value).strip().lower()
 
 
 # ---------------------------
-# 5. Amount parsing
+# 5. Beloppsnormalisering
 # ---------------------------
 def parse_amount(value):
+    """
+    Gör om LLM/sträng-belopp till float. Hanterar EU/US-format och valutatecken.
+
+    Viktigt för eval: samma logik som i validate() så att belopp blir jämförbara.
+    """
     if value is None:
         return None
 
@@ -122,12 +141,12 @@ def parse_amount(value):
     s = s.replace("€", "").replace("$", "")
     s = s.strip()
 
-    s = s.replace("\u00a0", " ")  # non-breaking space
+    s = s.replace("\u00a0", " ")  # hårt mellanslag
     s = s.replace(" ", "")
 
-    # Ex:
-    # 16,444.59  -> comma thousands, dot decimals
-    # 34.930,64  -> dot thousands, comma decimals
+    # Både punkt och komma: avgör vilket som är decimaltecken (sista förekomsten vinner)
+    # 16,444.59  → tusentalskomma, decimalpunkt
+    # 34.930,64  → tusentalspunkt, decimalkomma
     if "," in s and "." in s:
         if s.rfind(".") > s.rfind(","):
             s = s.replace(",", "")
@@ -135,12 +154,12 @@ def parse_amount(value):
             s = s.replace(".", "")
             s = s.replace(",", ".")
 
-    # Ex:
-    # 34930,64 -> comma decimals
+    # Endast komma → tolka som decimalkomma
+    # 34930,64
     elif "," in s:
         s = s.replace(",", ".")
 
-    # Only keep digits, minus, and dot
+    # Strippa allt utom siffror, minus och punkt
     s = re.sub(r"[^0-9.\-]", "", s)
 
     try:
@@ -150,9 +169,14 @@ def parse_amount(value):
 
 
 # ---------------------------
-# 6. Validation
+# 6. Validering (affärsregler)
 # ---------------------------
 def validate(fields):
+    """
+    Kontrollerar obligatoriska fält, att belopp går att parsa och en övre gräns.
+
+    Muterar fields['total_amount'] till float vid godkänd parsning.
+    """
     missing_fields = []
 
     required_fields = [
@@ -184,6 +208,7 @@ def validate(fields):
 
     fields["total_amount"] = amount
 
+    # Enkel risksignal: flagga orimligt höga belopp för manuell granskning
     if amount > 50000:
         return {
             "valid": False,
@@ -197,9 +222,17 @@ def validate(fields):
 
 
 # ---------------------------
-# 7. Duplicate detection
+# 7. Dubblettdetektering (regelbaserad)
 # ---------------------------
 def detect_duplicate(current_invoice, seen_invoices):
+    """
+    Jämför mot tidigare bearbetade fakturor i samma batch (ordning spelar roll).
+
+    Regel 1: samma fakturanummer (normaliserat).
+    Regel 2: samma leverantör + samma belopp + samma fakturadatum (fallback).
+
+    Returnerar (is_dup, orsak, matchande filnamn, regeltyp).
+    """
     current_number = normalize_text(current_invoice.get("invoice_number"))
     current_vendor = normalize_text(current_invoice.get("vendor"))
     current_amount = current_invoice.get("total_amount")
@@ -211,7 +244,7 @@ def detect_duplicate(current_invoice, seen_invoices):
         prev_amount = previous.get("total_amount")
         prev_date = normalize_text(previous.get("invoice_date"))
 
-        # Strong rule: same invoice number
+        # Primär signal: identiskt fakturanummer
         if current_number and prev_number and current_number == prev_number:
             return (
                 True,
@@ -220,7 +253,7 @@ def detect_duplicate(current_invoice, seen_invoices):
                 "invoice_number",
             )
 
-        # Fallback rule: same vendor + amount + invoice date
+        # Sekundär: leverantör + belopp + fakturadatum (t.ex. om nummer skiljer sig)
         if (
             current_vendor
             and prev_vendor
@@ -243,9 +276,10 @@ def detect_duplicate(current_invoice, seen_invoices):
 
 
 # ---------------------------
-# 8. Classification
+# 8. Klassificering (routing)
 # ---------------------------
 def classify(fields, validation_result, is_duplicate=False):
+    """Dubblett eller ogiltig data → manuell kö; annars auto-godkänd."""
     if is_duplicate:
         return "Needs review"
 
@@ -256,9 +290,15 @@ def classify(fields, validation_result, is_duplicate=False):
 
 
 # ---------------------------
-# 9. Main pipeline
+# 9. Huvudflöde per fil
 # ---------------------------
 def process_invoice(file_path, seen_invoices=None):
+    """
+    Kör hela pipelinen för en PDF.
+
+    seen_invoices: lista med dicts från tidigare filer i batchen (för dubbletter).
+    Anroparen ansvarar för att lägga till filename på dicts om det behövs för spårning.
+    """
     if seen_invoices is None:
         seen_invoices = []
 
@@ -276,6 +316,7 @@ def process_invoice(file_path, seen_invoices=None):
     duplicate_match_file = ""
     duplicate_rule_type = None
 
+    # Kör inte dubblettlogik på trasiga rader — undvik falska träffar
     if validation_result["valid"]:
         (
             is_duplicate,
@@ -302,7 +343,7 @@ def process_invoice(file_path, seen_invoices=None):
 
 
 # ---------------------------
-# 10. Test run
+# 10. Snabbtest från kommandorad
 # ---------------------------
 if __name__ == "__main__":
     path = "../../data/generated_invoices/INV_CLEAN_001.pdf"

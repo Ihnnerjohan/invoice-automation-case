@@ -1,10 +1,16 @@
+"""
+Batch-körning och utvärdering: alla PDF:er → predictions → jämförelse mot ground truth.
+
+Skriver predictions.csv och comparison_results.csv samt skriver ut accuracy och
+dubblettmått (precision/recall). Ordningen på filer i mappen styr dubbletthistoriken.
+"""
 from pathlib import Path
 import math
 import pandas as pd
 
 from process_invoice import process_invoice
 
-
+# __file__ = docs/src/ → parents[2] = projektrot
 BASE_DIR = Path(__file__).resolve().parents[2]
 INVOICE_DIR = BASE_DIR / "data" / "generated_invoices"
 GROUND_TRUTH_PATH = BASE_DIR / "data" / "expected_outputs" / "invoice_ground_truth_clean.csv"
@@ -13,6 +19,7 @@ COMPARISON_RESULTS_PATH = BASE_DIR / "data" / "expected_outputs" / "comparison_r
 
 
 def run_invoice_pipeline(pdf_path: Path, seen_invoices=None) -> dict:
+    """Kör process_invoice och lägger till filename så resultat kan joinas mot CSV."""
     result = process_invoice(str(pdf_path), seen_invoices=seen_invoices)
     result["filename"] = pdf_path.name
     return result
@@ -20,8 +27,10 @@ def run_invoice_pipeline(pdf_path: Path, seen_invoices=None) -> dict:
 
 def batch_process_invoices(invoice_dir: Path) -> pd.DataFrame:
     """
-    Kör pipeline på alla PDF-filer i katalogen.
-    Returnerar DataFrame med predictions.
+    Kör pipeline på alla PDF-filer i katalogen (sorterat på namn).
+    Returnerar DataFrame med en rad per fil (predictions).
+
+    Bygger seen_invoices i loop-ordning så dubbletter speglar batchens sekvens.
     """
     results = []
     seen_invoices = []
@@ -36,7 +45,7 @@ def batch_process_invoices(invoice_dir: Path) -> pd.DataFrame:
             result = run_invoice_pipeline(pdf_path, seen_invoices=seen_invoices)
             results.append(result)
 
-            # Lägg bara till invoices som har tillräckligt med data för duplicate check
+            # Endast kompletta rader får ligga kvar i "historiken" för dubblettregler
             if (
                 result.get("invoice_number")
                 and result.get("vendor")
@@ -47,6 +56,7 @@ def batch_process_invoices(invoice_dir: Path) -> pd.DataFrame:
             print(f"[OK] {pdf_path.name}")
         except Exception as e:
             print(f"[ERROR] {pdf_path.name}: {e}")
+            # En rad per fil även vid krasch — batch och eval blir komplett
             results.append({
                 "filename": pdf_path.name,
                 "invoice_number": None,
@@ -68,7 +78,9 @@ def batch_process_invoices(invoice_dir: Path) -> pd.DataFrame:
 
 def load_ground_truth(csv_path: Path) -> pd.DataFrame:
     """
-    Läser ground truth CSV och mappar kolumnnamn till eval-format.
+    Läser ground truth CSV och mappar kolumnnamn till samma schema som predictions.
+
+    Kräver expected_is_duplicate för att kunna utvärdera dubblettdetektering.
     """
     df = pd.read_csv(csv_path)
 
@@ -108,7 +120,8 @@ def load_ground_truth(csv_path: Path) -> pd.DataFrame:
 
 def normalize_ground_truth(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Normaliserar ground truth så att jämförelsen blir rättvis.
+    Samma normalisering som för predictions: datum som YYYY-MM-DD, vendor gemener,
+    belopp numeriskt, bool för expected_is_duplicate — annars blir jämförelsen orättvis.
     """
     df = df.copy()
 
@@ -143,9 +156,7 @@ def normalize_ground_truth(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def normalize_predictions(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Normaliserar predictions inför jämförelse.
-    """
+    """Speglar normalize_ground_truth så pred och sanning jämförs på samma format."""
     df = df.copy()
 
     for col in ["invoice_number", "vendor", "invoice_date", "due_date"]:
@@ -172,15 +183,14 @@ def normalize_predictions(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def compare_amounts(a, b, tolerance: float = 0.01) -> bool:
-    """
-    Jämför float-belopp med liten tolerans.
-    """
+    """True om två belopp är lika inom absolut tolerans (hanterar float-bruset)."""
     if pd.isna(a) or pd.isna(b):
         return False
     return math.isclose(float(a), float(b), abs_tol=tolerance)
 
 
 def label_duplicate_eval(row) -> str:
+    """Konfusion för dubblett: TP/FP/FN/TN utifrån predikterat vs förväntat."""
     predicted = bool(row["is_duplicate"])
     expected = bool(row["expected_is_duplicate"])
 
@@ -195,7 +205,8 @@ def label_duplicate_eval(row) -> str:
 
 def compare_predictions(pred_df: pd.DataFrame, gt_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Joinar predictions med ground truth och skapar match-kolumner.
+    Outer join på filename: fångar filer som saknas i någon av sidorna.
+    Lägger till fältvisa match-flaggor, all_fields_match och duplicate_eval_label.
     """
     pred_df = normalize_predictions(pred_df)
     gt_df = normalize_ground_truth(gt_df)
@@ -244,7 +255,8 @@ def compare_predictions(pred_df: pd.DataFrame, gt_df: pd.DataFrame) -> pd.DataFr
 
 def compute_accuracy_report(comparison_df: pd.DataFrame) -> dict:
     """
-    Räknar accuracy per fält och overall.
+    Andel korrekta fält och andel dokument där alla fält stämmer.
+    Endast rader där filename finns i både pred och GT (_merge == 'both').
     """
     matched_rows = comparison_df[comparison_df["_merge"] == "both"]
 
@@ -265,9 +277,7 @@ def compute_accuracy_report(comparison_df: pd.DataFrame) -> dict:
 
 
 def compute_duplicate_report(comparison_df: pd.DataFrame) -> dict:
-    """
-    Räknar duplicate detection metrics.
-    """
+    """Precision, recall och accuracy för dubblettflaggan + räkning av TP/FP/FN/TN."""
     matched_rows = comparison_df[comparison_df["_merge"] == "both"]
 
     if matched_rows.empty:
@@ -294,6 +304,7 @@ def compute_duplicate_report(comparison_df: pd.DataFrame) -> dict:
 
 
 def print_report(report: dict) -> None:
+    """Skriver extraktionsaccuracy till stdout."""
     print("\n=== ACCURACY REPORT ===")
     print(f"Documents compared:        {report['num_compared']}")
     print(f"invoice_number accuracy:   {report['invoice_number_accuracy']:.2%}")
@@ -305,6 +316,7 @@ def print_report(report: dict) -> None:
 
 
 def print_duplicate_report(report: dict) -> None:
+    """Skriver dubblettmått till stdout."""
     print("\n=== DUPLICATE DETECTION REPORT ===")
     print(f"duplicate precision:       {report['duplicate_precision']:.2%}")
     print(f"duplicate recall:          {report['duplicate_recall']:.2%}")
@@ -316,6 +328,7 @@ def print_duplicate_report(report: dict) -> None:
 
 
 def print_duplicate_rule_breakdown(comparison_df: pd.DataFrame) -> None:
+    """Visar hur ofta respektive dubblettregel triggats bland predikterade dubbletter."""
     matched_rows = comparison_df[comparison_df["_merge"] == "both"].copy()
 
     print("\n=== DUPLICATE RULE BREAKDOWN ===")
@@ -335,6 +348,7 @@ def print_duplicate_rule_breakdown(comparison_df: pd.DataFrame) -> None:
 
 
 def main():
+    """Kör batch, jämför mot ground truth, skriver rapporter och sparar CSV-filer."""
     pred_df = batch_process_invoices(INVOICE_DIR)
     gt_df = load_ground_truth(GROUND_TRUTH_PATH)
 

@@ -3,7 +3,7 @@
 generate_noisy_variants.py
 
 Create noisy image/PDF variants from existing invoice files for testing
-invoice extraction robustness in Power Automate / AI Builder flows.
+invoice extraction robustness (e.g. Python pipeline or future Power Platform flows).
 
 What it does
 ------------

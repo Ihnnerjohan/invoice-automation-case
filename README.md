@@ -4,6 +4,14 @@ En Python-baserad pipeline för fakturaautomation som extraherar strukturerad da
 
 Projektet är en **validerad baslinje** med genomtestat beteende och mätbara resultat.
 
+## Bakgrund: avsikt vs. leverans
+
+**Ursprunglig avsikt** var att bygga lösningen i **Microsoft Power Platform**: **Power Automate** för orkestrering, intag via **SharePoint** eller **OneDrive**, extraktion med **AI Builder** eller **Azure AI Document Intelligence** (Form Recognizer), samt strukturerad loggning i SharePoint eller Excel.
+
+**Varför det inte blev en integrerad Power Automate-lösning:** I den tillgängliga miljön saknades förutsättningarna för ett komplett end-to-end-flöde — bland annat begränsad **Microsoft 365 / Entra-tenant**, ingen aktiv **SharePoint-webbplats** för kopplingar, **OneDrive** som inte gick att använda som trigger, **ingen AI Builder-premiumlicens**, och **ingen Azure-prenumeration** (inga nycklar eller endpoint för Document Intelligence). Problemet var i praktiken **licensiering, provisioning och behörigheter**, inte själva affärs- eller pipeline-tänket.
+
+**Vad som levereras i detta repo** är en **Python-referensimplementation** (`docs/src/process_invoice.py`, `docs/src/batch_eval.py`) med samma logiska steg: intag från mapp (batch), text från PDF (`pdfplumber`), strukturerad extraktion via **OpenAI**, normalisering och validering, regelbaserad dubblettdetektering, status `Approved` / `Needs review`, samt utvärdering mot **ground truth** och CSV-loggar. Det är **inte** en driftsatt koppling till Power Automate, utan ett **testbart och förklarligt** alternativ som visar hur du tänker kring automation, styrning och kvalitet — och som i intervjun kan kopplas till hur samma logik skulle ligga bakom connectors i Power Platform/Azure.
+
 ---
 
 ## Projektöversikt
@@ -184,5 +192,3 @@ Projektet visar:
 - fullt validerat beteende
 - förklarlig dubblettdetektering
 - mätbara utvärderingsresultat
-
-

@@ -1,107 +1,112 @@
 # Invoice Automation Case
 
-A Python-based invoice automation pipeline for extracting structured data from PDF invoices, validating data, detecting duplicates, and evaluating results against ground truth.
+En Python-baserad pipeline för fakturaautomation som extraherar strukturerad data från PDF-fakturor, validerar data, upptäcker dubbletter och utvärderar resultat mot ground truth.
 
-This project represents a **validated baseline system** with fully tested behavior and measurable results.
-
----
-
-## Project Overview
-
-The system processes invoice PDFs and performs:
-
-1. Text extraction from PDF invoices
-2. AI-based field extraction
-3. Data normalization and validation
-4. Rule-based duplicate detection
-5. End-to-end evaluation against ground truth
+Projektet är en **validerad baslinje** med genomtestat beteende och mätbara resultat.
 
 ---
 
-## Key Features
+## Projektöversikt
 
-- PDF text extraction using `pdfplumber`
-- AI-based structured field extraction
-- Amount normalization across formats
-- Validation rules for invoice correctness
-- Explainable rule-based duplicate detection
-- Batch processing and evaluation pipeline
-- Ground truth comparison with metrics
+Systemet bearbetar faktura-PDF:er och utför:
+
+1. Textextraktion från PDF-fakturor
+2. AI-baserad fältextraktion
+3. Datanormalisering och validering
+4. Regelbaserad dubblettdetektering
+5. End-to-end-utvärdering mot ground truth
+
+---
+
+## Huvudfunktioner
+
+- PDF-textextraktion med `pdfplumber`
+- AI-baserad strukturerad fältextraktion
+- Beloppsnormalisering över olika format
+- Valideringsregler för korrekta fakturor
+- Förklarlig, regelbaserad dubblettdetektering
+- Batchkörning och utvärderingspipeline
+- Jämförelse mot ground truth med mätvärden
 
 ---
 
 ## Pipeline
 
-### 1. Text Extraction
-Extract raw text from invoice PDFs.
+### 1. Textextraktion
+Extraherar råtext från faktura-PDF:er.
 
-### 2. AI Field Extraction
-Extract:
-- invoice_number
-- vendor
-- invoice_date
-- due_date
-- total_amount
+### 2. AI-fältextraktion
+Extraherar:
 
-### 3. Normalization
-Handles formats like:
+- `invoice_number`
+- `vendor`
+- `invoice_date`
+- `due_date`
+- `total_amount`
+
+### 3. Normalisering
+Hanterar bland annat format som:
+
 - 16,444.59
 - 34 930,64
-- currency strings
+- strängar med valuta
 
-### 4. Validation
-Rules:
-- all fields must exist
-- amount must be parseable
-- amount <= 50,000
+### 4. Validering
+Regler:
 
-### 5. Duplicate Detection
+- alla fält måste finnas
+- beloppet måste gå att tolka
+- belopp ≤ 50 000
 
-Strong rule:
-- same invoice_number
+### 5. Dubblettdetektering
 
-Fallback rule:
-- same vendor
-- same invoice_date
-- same total_amount (±0.01)
+Primär regel:
 
-### 6. Classification
+- samma `invoice_number`
 
-if duplicate → Needs review  
-if invalid → Needs review  
-else → Approved  
+Reservregel:
+
+- samma leverantör (`vendor`)
+- samma `invoice_date`
+- samma `total_amount` (±0,01)
+
+### 6. Klassificering
+
+vid dubblett → `Needs review`  
+vid ogiltig data → `Needs review`  
+annars → `Approved`
 
 ---
 
-## How to Run
+## Så kör du projektet
 
-1. Install dependencies:
+1. Installera beroenden:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Copy the environment template and add your API key (the `.env` file is gitignored):
+2. Kopiera miljömallen och lägg in din API-nyckel (`.env` versionshanteras inte):
 
 ```bash
 cp .env.example .env
 ```
 
-3. Set `OPENAI_API_KEY` in `.env` (loaded automatically via `python-dotenv`), or export it in your shell.
+3. Sätt `OPENAI_API_KEY` i `.env` (laddas automatiskt via `python-dotenv`), eller exportera variabeln i terminalen.
 
-4. From project root:
+4. Från projektroten:
 
 ```bash
 python docs/src/batch_eval.py
 ```
 
-This processes:
+Detta bearbetar:
 
 ```text
 data/generated_invoices/
 ```
 
-And generates:
+och skapar:
 
 ```text
 data/expected_outputs/predictions.csv
@@ -110,74 +115,74 @@ data/expected_outputs/comparison_results.csv
 
 ---
 
-## Results
+## Resultat
 
-### Extraction Accuracy
+### Extraktionsnoggrannhet
 
-- invoice_number: 100%
-- vendor: 100%
-- invoice_date: 100%
-- due_date: 100%
-- total_amount: 100%
-- overall: 100%
+- `invoice_number`: 100 %
+- `vendor`: 100 %
+- `invoice_date`: 100 %
+- `due_date`: 100 %
+- `total_amount`: 100 %
+- sammantaget per dokument: 100 %
 
-### Duplicate Detection
+### Dubblettdetektering
 
-- precision: 100%
-- recall: 100%
-- accuracy: 100%
+- precisionsgrad: 100 %
+- återfinningsgrad (recall): 100 %
+- träffsäkerhet (accuracy): 100 %
 
-- true positives: 4
-- false positives: 0
-- false negatives: 0
-- true negatives: 12
+- sanna positiva: 4
+- falska positiva: 0
+- falska negativa: 0
+- sanna negativa: 12
 
-### Rule Breakdown
+### Fördelning per regel
 
-- invoice_number: 3
-- vendor_amount_date: 1
+- `invoice_number`: 3
+- `vendor_amount_date`: 1
 
 ---
 
 ## Dataset
 
-- 16 invoices total
-- clean invoices
-- duplicates
-- fallback duplicate case
-- negative control case
-- suspicious cases
+- 16 fakturor totalt
+- rena fakturor
+- dubbletter
+- reservfall för dubblett (vendor + belopp + datum)
+- negativ kontroll
+- misstänkta fall
 
 ---
 
-## Limitations
+## Begränsningar
 
-- no vendor normalization
-- no fuzzy matching
-- no persistence across batches
-- batch-order dependent
-- small controlled dataset
-
----
-
-## Future Improvements
-
-- vendor normalization
-- fuzzy matching
-- persistence layer
-- OCR support
-- larger datasets
-- fraud detection extensions
+- ingen leverantörsnormalisering
+- ingen fuzzy matchning
+- ingen persistens mellan batcher
+- beroende av ordning i batchen
+- litet, kontrollerat dataset
 
 ---
 
-## Summary
+## Framtida förbättringar
 
-This project demonstrates:
+- leverantörsnormalisering
+- fuzzy matchning
+- persistenslager
+- OCR-stöd
+- större dataset
+- utökad bedrägeri-/avvikelsehantering
 
-- a complete invoice processing pipeline
-- fully validated behavior
-- explainable duplicate detection
-- measurable evaluation results
+---
 
-It is designed to be **simple, testable, and interview-ready**.
+## Sammanfattning
+
+Projektet visar:
+
+- en komplett pipeline för fakturahantering
+- fullt validerat beteende
+- förklarlig dubblettdetektering
+- mätbara utvärderingsresultat
+
+Det är tänkt att vara **enkelt, testbart och redo att visa i intervju**.

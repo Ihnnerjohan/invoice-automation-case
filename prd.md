@@ -361,3 +361,369 @@ This project should be presented not as “a cool demo,” but as:
 - A realistic AP/finance workflow
 - An example of combining AI + automation + governance + human review
 - A case designed with scalability and operational reasoning in mind
+
+---
+
+# PRD — AI-driven fakturaintag, validering och granskningspipeline (svensk version)
+
+## 1. Projekttitel
+AI-driven fakturaintag, validering och granskningspipeline i Power Automate
+
+---
+
+## 2. Bakgrund
+Många organisationer tar emot fakturor via e-post eller dokumentmappar i flera format och med olika kvalitet. Manuell fakturahantering är långsam, felbenägen och svår att skala. Projektet ska simulera ett realistiskt konsultcase där inkommande fakturor tas emot, analyseras med AI, valideras med affärsregler och dirigeras antingen till automatisk hantering eller manuell granskning.
+
+Projektet är utformat som ett portfolio-case för intervjuer inom AI, automation, processförbättring och affärsnytta.
+
+---
+
+## 3. Problembeskrivning
+Ekonomi- och operationsteam lägger ofta för mycket tid på repetitiv fakturahantering:
+- Öppna bilagor manuellt
+- Läsa fakturametadata manuellt
+- Registrera leverantör, belopp, datum och fakturanummer manuellt
+- Upptäcka dubbletter eller misstänkta fakturor för sent
+- Eskalera ofullständiga eller lågkvalitativa fakturor manuellt
+
+Verksamheten behöver en lösning som:
+- Minskar repetitivt manuellt arbete
+- Ökar hastigheten i intaget
+- Förbättrar datakvaliteten
+- Identifierar misstänkta eller ofullständiga fakturor
+- Bevarar manuell granskning i osäkra fall
+
+---
+
+## 4. Mål
+Bygga en realistisk pipeline för fakturaautomation med Power Automate och AI-tjänster som kan:
+1. Ta emot fakturor från en mapp
+2. Extrahera strukturerad fakturadata
+3. Tillämpa validering och affärsregler
+4. Dirigera fakturor till:
+   - Godkänd (Approved)
+   - Behöver granskning (Needs review)
+   - Misstänkt dubblett/bedrägeri
+5. Logga alla utfall
+6. Ta fram en daglig sammanfattning
+7. Stödja en enkel manuell granskningsprocess
+
+---
+
+## 5. Framgångskriterier
+Lösningen anses lyckad om den kan:
+- Bearbeta minst 30 syntetiska fakturor
+- Korrekt ta emot filer från en övervakad plats
+- Extrahera kärnfält från rena fakturor
+- Upptäcka lågkvalitativa eller ofullständiga fakturor och skicka dem till granskning
+- Upptäcka dubbletter med logik baserad på faktura-ID, leverantör och belopp
+- Logga beslut konsekvent i ett strukturerat format
+- Generera en daglig sammanfattning av bearbetningsutfall
+- Visa tydlig affärsnytta i en intervjusituation
+
+---
+
+## 6. Omfattning
+
+### Inom omfattning
+- Generering av syntetiskt fakturadataset
+- Olika fakturatyper och layouter
+- Scenarier med rena, stökiga, duplicerade och misstänkta fakturor
+- Inflöde (ingestion) i Power Automate
+- AI-baserad extraktion av fakturafält
+- Affärsregelvalidering
+- Loggning till SharePoint-lista eller Excel-tabell
+- Kö för manuell granskning
+- Flöde för daglig sammanfattning
+- Arkitekturdokumentation
+- Testmatris och testkörning
+- Berättelse redo för intervju
+
+### Utanför omfattning
+- Verklig ERP-integration
+- Verklig bokföring
+- Verklig leverantörsbetalning
+- Säkerhetsmodell i produktionsklass
+- Bedrägeridetektering i produktionsklass
+- Avancerad front-end-UX
+- Komplex Power Apps-lösning om tid inte räcker
+
+---
+
+## 7. Primära användarpersonas
+
+### Persona 1 — Ekonomi/AP-medarbetare
+Behöver att inkommande fakturor hanteras snabbare med färre manuella steg.
+
+### Persona 2 — Granskare/revisor
+Behöver att misstänkta eller ofullständiga fakturor flaggas med tydliga orsaker.
+
+### Persona 3 — Automationskonsult
+Behöver en lösning som är förklarlig, testbar och tydligt kopplad till affärsnytta.
+
+---
+
+## 8. Användarberättelser
+
+### Intag
+Som ekonomimedarbetare vill jag att fakturor som läggs i en mapp bearbetas automatiskt så att jag inte behöver granska varje fil manuellt.
+
+### Extraktion
+Som ekonomimedarbetare vill jag att fakturanummer, leverantörsnamn, datum och totalbelopp extraheras automatiskt så att manuell registrering minskar.
+
+### Validering
+Som granskare vill jag att fakturor med saknade fält, låg confidence, dubbletter eller misstänkta värden dirigeras till granskning så att riskfylld data inte auto-godkänns.
+
+### Loggning
+Som konsult vill jag att varje bearbetad faktura loggas med status och orsak så att jag kan visa spårbarhet och styrning (governance).
+
+### Granskning
+Som granskare vill jag en enkel granskningskö så att jag kan godkänna eller avvisa osäkra fakturor.
+
+### Rapportering
+Som chef vill jag en daglig sammanfattning av bearbetade fakturor så att jag kan förstå automationens prestanda.
+
+---
+
+## 9. Funktionella krav
+
+### FR1 — Filintag
+Lösningen ska övervaka en angiven mapp för nya fakturafiler.
+
+### FR2 — Stödda filtyper
+Lösningen bör stödja PDF och bildbaserade fakturor för test.
+
+### FR3 — AI-extraktion
+Lösningen ska försöka extrahera:
+- Leverantörsnamn
+- Faktura-ID
+- Fakturadatum
+- Förfallodatum
+- Valuta
+- Momsbelopp
+- Totalbelopp
+
+### FR4 — Validering av obligatoriska fält
+Lösningen ska skicka fakturor till granskning om kritiska fält saknas.
+
+### FR5 — Confidence-validering
+Lösningen ska skicka fakturor till granskning när extraktionens confidence understiger en vald tröskel.
+
+### FR6 — Dubblettdetektering
+Lösningen ska upptäcka sannolika dubbletter baserat på:
+- Leverantörsnamn
+- Faktura-ID
+- Totalbelopp
+
+### FR7 — Detektering av misstänkta mönster
+Lösningen ska flagga misstänkta fakturor när:
+- Förfallodatum är tidigare än fakturadatum
+- Beloppet är ovanligt högt
+- Leverantören inte finns på vitlista
+- Fält verkar inkonsekventa
+
+### FR8 — Loggning
+Lösningen ska lagra bearbetad fakturadata och status i en strukturerad logg.
+
+### FR9 — Granskningskö
+Lösningen ska skriva fakturor som kräver granskning till en separat granskningskö eller tydligt markera dem i loggen.
+
+### FR10 — Daglig sammanfattning
+Lösningen ska producera en daglig sammanfattning med antal per utfallskategori.
+
+---
+
+## 10. Icke-funktionella krav
+
+### NFR1 — Förklarbarhet
+Flödet måste vara lätt att förklara i en intervju.
+
+### NFR2 — Spårbarhet
+Varje beslut ska ha en kopplad orsak.
+
+### NFR3 — Testbarhet
+Projektet ska innehålla testdata, förväntade utfall och en testmatris.
+
+### NFR4 — Modularitet
+Lösningen ska vara uppdelad i tydliga flöden och återanvändbara dataassets.
+
+### NFR5 — Realism
+Användningsfallet ska kännas tillräckligt realistiskt för en diskussion om konsulting/automation.
+
+---
+
+## 11. Design av indataset
+
+### Kategorier
+1. Rena fakturor
+2. Stökiga men legitima fakturor
+3. Fakturor med saknade fält
+4. Duplicerade fakturor
+5. Misstänkta/falska fakturor
+
+### Målvolym
+Minst 30 fakturor totalt.
+
+### Exempelfördelning
+- 10 rena
+- 8 stökiga
+- 6 med saknade fält
+- 3 dubbletter
+- 5 misstänkta/falska
+
+---
+
+## 12. Ground truth / förväntat utfall
+Varje faktura ska ha en motsvarande förväntad utdatarad som inkluderar:
+- Filnamn
+- Förväntad leverantör
+- Förväntat faktura-ID
+- Förväntat fakturadatum
+- Förväntat förfallodatum
+- Förväntad valuta
+- Förväntat totalbelopp
+- Kategori
+- Förväntat utfall
+- Anteckningar
+
+Förväntade utfall:
+- Godkänd (Approved)
+- Behöver granskning (Needs review)
+- Misstänkt dubblett (Suspected duplicate)
+- Misstänkt bedrägeri (Suspected fraud)
+
+---
+
+## 13. Föreslagna systemkomponenter
+
+### Komponent A — Generator av syntetisk data
+Python-skript i Cursor som genererar fakturadokument och metadata för förväntade utfall.
+
+### Komponent B — Lagringslager
+OneDrive- eller SharePoint-mapp för inkommande fakturafiler.
+
+### Komponent C — Extraktionslager
+Power Automate-flöde med AI-åtgärd för extraktion.
+
+### Komponent D — Regelmotor
+Villkor i Power Automate för:
+- Saknade fält
+- Låg confidence
+- Dubbletter
+- Misstänkta datum
+- Kontroll mot leverantörsvitlista
+- Kontroll av höga belopp
+
+### Komponent E — Loggningslager
+SharePoint-lista eller Excel-tabell med strukturerade bearbetningsresultat.
+
+### Komponent F — Granskningslager
+Enkel kö/lista där osäkra fakturor kan granskas.
+
+### Komponent G — Rapporteringslager
+Dagligt sammanfattningsflöde via e-post eller Teams.
+
+---
+
+## 14. Definitioner av status
+
+### Godkänd (Approved)
+Fakturan passerade extraktions- och valideringskontroller.
+
+### Behöver granskning (Needs review)
+Fakturan kunde inte lita på automatiskt och kräver manuell granskning.
+
+### Misstänkt dubblett (Suspected duplicate)
+Fakturan verkar matcha en tidigare faktura enligt dubblettlogik.
+
+### Misstänkt bedrägeri (Suspected fraud)
+Fakturan har misstänkta mönster och bör granskas med hög prioritet.
+
+---
+
+## 15. Affärsregler
+
+### Regelgrupp A — Saknade fält
+Om leverantörsnamn, faktura-ID, fakturadatum eller totalbelopp saknas:
+- Status = Behöver granskning (Needs review)
+
+### Regelgrupp B — Låg confidence
+Om confidence understiger tröskel:
+- Status = Behöver granskning (Needs review)
+
+### Regelgrupp C — Dubblettdetektering
+Om samma leverantör + samma faktura-ID + samma belopp redan finns:
+- Status = Misstänkt dubblett (Suspected duplicate)
+
+### Regelgrupp D — Leverantörsvitlista
+Om leverantören inte finns i godkänd leverantörslista:
+- Status = Behöver granskning eller Misstänkt bedrägeri beroende på kontext
+
+### Regelgrupp E — Datumlogik
+Om förfallodatum är tidigare än fakturadatum:
+- Status = Misstänkt bedrägeri (Suspected fraud)
+
+### Regelgrupp F — Beloppslogik
+Om belopp överstiger avvikelsetröskel:
+- Status = Behöver granskning (Needs review)
+
+---
+
+## 16. Risker och antaganden
+
+### Risker
+- AI-extraktion kan kräva credits eller begränsad åtkomst
+- Fakturaformat kan variera för mycket
+- Tiden är begränsad
+- Inloggnings-/miljöproblem i Power Platform
+
+### Antaganden
+- En Power Automate-miljö finns tillgänglig
+- AI-extraktion är tillgänglig eller kan simuleras
+- Syntetisk data räcker för demonstrationsändamål
+- SharePoint- eller Excel-loggning finns tillgänglig
+
+---
+
+## 17. Fallback-strategi
+Om AI-extraktion inte är tillgänglig:
+- Simulera extraktion via förgenererad metadata
+- Fortsätt med dirigering, validering, loggning och granskningslogik
+- Var transparent i intervjun om vad som simulerats
+
+---
+
+## 18. Leverabler
+1. Syntetiskt fakturadataset
+2. Ground truth CSV
+3. Power Automate-flöde 1: Intag + extraktion + loggning
+4. Power Automate-flöde 2: Validering + dirigering
+5. Power Automate-flöde 3: Daglig sammanfattning
+6. Valfritt flöde för manuell granskning
+7. Arkitekturdokument
+8. Testmatris
+9. Testresultat
+10. Intervjupitch
+
+---
+
+## 19. Definition av klart
+Projektet är klart när:
+- En övervakad mapp tar emot fakturor
+- Minst 30 fakturor finns tillgängliga
+- Extraktion fungerar eller är trovärdigt simulerad
+- Affärsregler dirigerar fakturor till rätt kategorier
+- Resultat loggas
+- Daglig sammanfattning fungerar
+- Testfall har körts
+- Dokumentationen är komplett
+- En koncis intervjuberättelse är färdig
+
+---
+
+## 20. Positionering i intervjun
+Projektet ska presenteras inte som ”en cool demo”, utan som:
+- Ett affärsautomation-use-case
+- Ett realistiskt AP/ekonomiflöde
+- Ett exempel på kombinationen AI + automation + styrning (governance) + manuell granskning
+- Ett case utformat med skalbarhet och operativt resonemang i åtanke

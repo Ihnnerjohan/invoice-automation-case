@@ -185,4 +185,4 @@ Projektet visar:
 - förklarlig dubblettdetektering
 - mätbara utvärderingsresultat
 
-Det är tänkt att vara **enkelt, testbart och redo att visa i intervju**.
+

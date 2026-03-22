@@ -1,0 +1,17 @@
+file_name,expected_vendor_name,expected_invoice_id,expected_invoice_date,expected_due_date,expected_currency,expected_subtotal,expected_tax,expected_total,expected_vat_number,expected_category,expected_is_duplicate,expected_outcome,notes
+INV_CLEAN_001.pdf,Baltic Cloud Services OÜ,INV-2026-001-9279,2026-03-11,2026-03-31,EUR,15513.76,930.83,16444.59,EE102345678,clean,False,Approved,Clean synthetic invoice for baseline extraction tests.
+INV_CLEAN_002.pdf,Nordisk Kontorsservice AB,INV-2026-002-2674,2025-12-13,2026-01-12,SEK,31188.07,3742.57,34930.64,SE556712345601,clean,False,Approved,Clean synthetic invoice for baseline extraction tests.
+INV_CLEAN_003.pdf,GreenGrid Logistics AB,INV-2026-003-5741,2026-01-28,2026-02-17,SEK,40756.26,2445.38,43201.64,SE556845678901,clean,False,Approved,Clean synthetic invoice for baseline extraction tests.
+INV_CLEAN_004.pdf,NorthPeak Software Oy,INV-2026-004-5422,2025-11-24,2025-12-04,EUR,52271.47,6272.58,58544.05,FI23456789,clean,False,Approved,Clean synthetic invoice for baseline extraction tests.
+INV_CLEAN_005.pdf,Baltic Cloud Services OÜ,INV-2026-005-6155,2025-12-17,2026-01-06,EUR,6473.58,1618.39,8091.97,EE102345678,clean,False,Approved,Clean synthetic invoice for baseline extraction tests.
+INV_CLEAN_006.pdf,Baltic Cloud Services OÜ,INV-2026-006-9348,2026-01-23,2026-02-22,EUR,32234.39,1934.06,34168.45,EE102345678,clean,False,Approved,Clean synthetic invoice for baseline extraction tests.
+INV_CLEAN_007.pdf,Nordisk Kontorsservice AB,INV-2026-007-1188,2025-11-24,2025-12-04,SEK,32957.95,8239.49,41197.44,SE556712345601,clean,False,Approved,Clean synthetic invoice for baseline extraction tests.
+INV_CLEAN_008.pdf,Baltic Cloud Services OÜ,INV-2026-008-9317,2025-12-17,2026-01-06,EUR,42003.29,5040.39,47043.68,EE102345678,clean,False,Approved,Clean synthetic invoice for baseline extraction tests.
+INV_CLEAN_009.pdf,Svea Teknikpartner AB,INV-2026-009-4923,2026-01-26,2026-02-10,SEK,35785.26,4294.23,40079.49,SE556823456701,clean,False,Approved,Clean synthetic invoice for baseline extraction tests.
+INV_CLEAN_010.pdf,Svea Teknikpartner AB,INV-2026-010-7932,2026-03-04,2026-04-03,SEK,6644.34,1661.09,8305.43,SE556823456701,clean,False,Approved,Clean synthetic invoice for baseline extraction tests.
+INV_SUSP_001.pdf,GreenGrid Logistics AB,INV-2026-003-5741,2026-01-28,2026-02-17,SEK,40756.26,2445.38,43201.64,SE556845678901,suspicious,True,Needs review,Simulated suspicious invoice (Vendor not in whitelist).
+INV_SUSP_002.pdf,NorthPeak Software Oy,INV-2026-004-5422,2025-11-24,2025-12-04,EUR,52271.47,6272.58,58544.05,FI23456789,suspicious,False,Needs review,Simulated suspicious invoice (Amount exceeds expected threshold).
+INV_DUP_001.pdf,Baltic Cloud Services OÜ,INV-2026-001-9279,2026-03-11,2026-03-31,EUR,15513.76,930.83,16444.59,EE102345678,duplicate,True,Suspected duplicate,Exact duplicate of INV_CLEAN_001.
+INV_DUP_002.pdf,Nordisk Kontorsservice AB,INV-2026-002-2674,2025-12-13,2026-01-12,SEK,31188.07,3742.57,34930.64,SE556712345601,duplicate,True,Suspected duplicate,Exact duplicate of INV_CLEAN_002.
+INV_DUP_003.pdf,GreenGrid Logistics AB,INV-2026-003-9999,2026-01-28,2026-02-17,SEK,40756.26,2445.38,43201.64,SE556845678901,duplicate,true,Needs review,Fallback duplicate test.
+INV_NONDUP_001.pdf,GreenGrid Logistics AB,INV-2026-003-8888,2026-01-28,2026-02-17,SEK,40805.26,2448.32,43253.58,SE556845678901,control_non_duplicate,false,Approved,"Control test: same vendor + same invoice_date as INV_CLEAN_003, but different invoice_number and different total_amount. Should NOT trigger duplicate detection."

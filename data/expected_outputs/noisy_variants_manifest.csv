@@ -1,0 +1,9 @@
+source_file,generated_file,category,expected_outcome,transform_steps,notes
+INV_CLEAN_002.png,INV_NOISY_001.png,noisy,Needs review,resized_0.84;rotated_1.51;contrast_0.92;brightness_0.96;blur_0.62;jpeg_q40,Noisy image variant generated for extraction robustness testing.
+INV_CLEAN_009.png,INV_NOISY_002.png,noisy,Needs review,resized_0.88;rotated_2.36;contrast_0.72;brightness_0.92;blur_1.16;grayscale;jpeg_q50,Noisy image variant generated for extraction robustness testing.
+INV_CLEAN_006.png,INV_NOISY_003.png,noisy,Needs review,resized_0.96;rotated_0.23;brightness_0.99,Noisy image variant generated for extraction robustness testing.
+INV_CLEAN_010.png,INV_NOISY_004.png,noisy,Needs review,resized_0.80;rotated_1.75;jpeg_q51,Noisy image variant generated for extraction robustness testing.
+INV_CLEAN_003.png,INV_NOISY_005.png,noisy,Needs review,resized_0.83;rotated_2.79;contrast_0.84;brightness_1.03;blur_0.78;jpeg_q42,Noisy image variant generated for extraction robustness testing.
+INV_CLEAN_006.png,INV_NOISY_006.png,noisy,Needs review,rotated_-1.73;contrast_0.77;brightness_0.90;jpeg_q59,Noisy image variant generated for extraction robustness testing.
+INV_CLEAN_007.png,INV_NOISY_007.png,noisy,Needs review,rotated_-2.29;contrast_0.88;brightness_1.04;blur_0.98,Noisy image variant generated for extraction robustness testing.
+INV_CLEAN_003.png,INV_NOISY_008.png,noisy,Needs review,resized_0.80;rotated_-2.50;contrast_0.89;brightness_0.87;blur_1.40,Noisy image variant generated for extraction robustness testing.

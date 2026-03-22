@@ -1,0 +1,12 @@
+# Körning av pipelinen (docs/src/)
+openai>=1.0.0
+pdfplumber>=0.10.0
+pandas>=2.0.0
+python-dotenv>=1.0.0
+
+# Valfritt: generera syntetiska PDF-fakturor (projektrot)
+# reportlab>=4.0.0
+
+# Valfritt: generate_noisy_variants.py
+# pillow>=10.0.0
+# pdf2image>=1.16.0

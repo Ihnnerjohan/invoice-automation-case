@@ -6,9 +6,8 @@
 
 **Why that integration was not completed:** The available environment lacked a fully provisioned Microsoft 365 / Azure backend: limited tenant rights, **no active SharePoint site** for standard connectors, **OneDrive** not usable as a reliable trigger, **no AI Builder premium entitlement**, and **no Azure subscription** (therefore no Document Intelligence keys or endpoint). **The blocker was licensing, provisioning, and permissions—not the validity of the business design.**
 
-**What this repository actually delivers:** A **Python reference implementation** (`docs/src/process_invoice.py`, `docs/src/batch_eval.py`, `README.md`) that implements the **same logical pipeline**: read invoice PDFs from a folder (batch), extract text (`pdfplumber`), structured field extraction via **OpenAI**, normalization and validation, **rule-based duplicate detection** (same invoice ID, or same vendor + invoice date + total amount within tolerance vs. prior items in the batch), routing to `Approved` or `Needs review`, and **measurable evaluation** against ground-truth CSVs. **This is not a deployed Power Automate solution.** It is an end-to-end, testable substitute for interviews and demos.
+**What this repository actually delivers:** A **Python reference implementation** (`docs/src/process_invoice.py`, `docs/src/batch_eval.py`, `README.md`) that implements the **same logical pipeline**: read invoice PDFs from a folder (batch), extract text (`pdfplumber`), structured field extraction via **OpenAI**, normalization and validation, **rule-based duplicate detection** (same invoice ID, or same vendor + invoice date + total amount within tolerance vs. prior items in the batch), routing to `Approved` or `Needs review`, and **measurable evaluation** against ground-truth CSVs. **This is not a deployed Power Automate solution.** It is an end-to-end, testable substitute for development and demonstration.
 
-**Interview framing:** Lead with the **business problem and system** (ingest → extract → validate → route → measure). State clearly that **Power Automate was the planned integration layer** but could not be finished E2E in the given tenant; the Python pipeline **proves the rules, AI-assisted extraction, and quality metrics** that would sit behind similar connectors in production.
 
 ---
 
@@ -20,7 +19,7 @@ AI-Driven Invoice Intake, Validation and Review Pipeline *(PRD product intent; *
 ## 2. Background
 Many organizations receive invoices through email or document drop folders in multiple formats and quality levels. Manual invoice handling is slow, error-prone, and difficult to scale. This project aims to simulate a realistic consulting-style automation case where incoming invoices are ingested, analyzed using AI, validated with business rules, and routed either to automatic acceptance or human review.
 
-This project is designed as an interview portfolio case for a role focused on AI, automation, process improvement, and business value realization.
+This project is designed as an practical automation case for a role focused on AI, automation, process improvement, and business value realization.
 
 **Implementation note:** The first design target was **Power Automate** with **SharePoint/OneDrive**, **AI Builder**, and/or **Azure AI Document Intelligence**. End-to-end delivery on Power Platform was **not achievable** in the available tenant for the reasons summarized in **Document status** above. The **delivered software** is the Python pipeline in this repository, aligned with the same acceptance themes (traceability, rules, human review for uncertainty, testability).
 
@@ -67,7 +66,7 @@ The solution is considered successful if it can:
 - Detect duplicates using rule-based logic: **same invoice ID**, and/or **same vendor + invoice date + total amount** within tolerance against previously processed items in the batch *(reference implementation in `process_invoice.py`)*
 - Log decisions consistently in a structured format
 - Generate a daily summary of processing outcomes
-- Demonstrate clear business value in an interview setting
+- Demonstrate clear business value in an operational setting
 
 ---
 
@@ -164,7 +163,7 @@ The solution shall detect likely duplicates using rules consistent with the refe
 - **Primary:** same **Invoice ID** (invoice number) as a previously processed invoice in the batch
 - **Fallback:** same **vendor** + same **invoice date** + same **total amount** (within a small tolerance)
 
-*(A simpler “vendor + invoice ID + amount” check remains a valid interview variant for a datastore-backed system; the batch Python code uses the rules above.)*
+*(A simpler “vendor + invoice ID + amount” check remains a valid variant for a datastore-backed system; the batch Python code uses the rules above.)*
 
 ### FR7 — Suspicious Pattern Detection
 The solution shall flag suspicious invoices when:
@@ -187,7 +186,7 @@ The solution shall produce a daily summary with counts per outcome category.
 ## 10. Non-Functional Requirements
 
 ### NFR1 — Explainability
-The flow must be easy to explain in an interview.
+The flow must be easy to explain to technical and business stakeholders.
 
 ### NFR2 — Traceability
 Every decision should have a reason attached.
@@ -352,7 +351,7 @@ If amount exceeds anomaly threshold:
 If AI extraction is not available at all:
 - Simulate extraction via pre-generated metadata
 - Continue with routing, validation, logging and review logic
-- Be transparent in interview about what was simulated
+- Be transparent about what was simulated
 
 **Always** be transparent that **Power Automate integration was intended** but **not shipped** in this repo; the Python code is the **delivered reference**.
 
@@ -368,7 +367,7 @@ If AI extraction is not available at all:
 7. Architecture document *(PRD + `docs/` + `README.md`)*  
 8. Test matrix  
 9. Test results  
-10. Interview pitch *(clarify intent vs. Python delivery)*  
+10. Project summary *(clarifies intent vs. Python delivery)*  
 
 ---
 
@@ -381,7 +380,7 @@ If AI extraction is not available at all:
 - Results are **logged** to CSV (and traceable reasons exist)
 - **Test cases** are executed and documented
 - Documentation **explicitly states** Power Platform intent vs. Python delivery
-- A concise **interview story** is ready
+- A concise project narrative is ready
 
 **Full PRD “done” including Power Automate** would additionally require a provisioned tenant, flows, and daily summary—**out of scope for the delivered repository**.
 
@@ -406,7 +405,7 @@ This project should be presented not as “a cool demo,” but as:
 
 **Varför den integrationen inte slutfördes:** Miljön saknade en fullt provisionerad Microsoft 365 / Azure-backend: begränsade rättigheter i tenanten, **ingen aktiv SharePoint-webbplats** för standardkopplingar, **OneDrive** gick inte att lita på som trigger, **ingen AI Builder-premiumlicens** och **ingen Azure-prenumeration** (därmed inga nycklar eller endpoint för Document Intelligence). **Spärren var licensiering, provisioning och behörigheter — inte affärsdesignen.**
 
-**Vad detta repo faktiskt levererar:** En **Python-referensimplementation** (`docs/src/process_invoice.py`, `docs/src/batch_eval.py`, `README.md`) som implementerar **samma logiska pipeline**: läsa faktura-PDF:er från mapp (batch), extrahera text (`pdfplumber`), strukturerad fältextraktion via **OpenAI**, normalisering och validering, **regelbaserad dubblettdetektering** (samma faktura-ID, eller samma leverantör + fakturadatum + totalbelopp inom tolerans mot tidigare poster i batchen), dirigering till `Approved` eller `Needs review`, samt **mätbar utvärdering** mot ground truth-CSV. **Detta är inte en driftsatt Power Automate-lösning**, utan ett end-to-end, testbart substitut för demo och intervju.
+**Vad detta repo faktiskt levererar:** En **Python-referensimplementation** (`docs/src/process_invoice.py`, `docs/src/batch_eval.py`, `README.md`) som implementerar **samma logiska pipeline**: läsa faktura-PDF:er från mapp (batch), extrahera text (`pdfplumber`), strukturerad fältextraktion via **OpenAI**, normalisering och validering, **regelbaserad dubblettdetektering** (samma faktura-ID, eller samma leverantör + fakturadatum + totalbelopp inom tolerans mot tidigare poster i batchen), dirigering till `Approved` eller `Needs review`, samt **mätbar utvärdering** mot ground truth-CSV. **Detta är inte en driftsatt Power Automate-lösning**, utan ett end-to-end, testbart substitut för utveckling och demonstration.
 
 **Intervjuformulering:** Börja med **affärsproblem och system** (intag → extraktion → validering → dirigering → mätning). Var tydlig med att **Power Automate var det planerade integrationslagret** men att E2E inte kunde färdigställas i den tillgängliga tenanten; Python-pipelinen **bevisar reglerna, AI-stödd extraktion och kvalitetsmått** som i produktion skulle kunna ligga bakom motsvarande kopplingar i Power Platform/Azure.
 
@@ -420,7 +419,7 @@ AI-driven fakturaintag, validering och granskningspipeline *(PRD:s produktintent
 ## 2. Bakgrund
 Många organisationer tar emot fakturor via e-post eller dokumentmappar i flera format och med olika kvalitet. Manuell fakturahantering är långsam, felbenägen och svår att skala. Projektet ska simulera ett realistiskt konsultcase där inkommande fakturor tas emot, analyseras med AI, valideras med affärsregler och dirigeras antingen till automatisk hantering eller manuell granskning.
 
-Projektet är utformat som ett portfolio-case för intervjuer inom AI, automation, processförbättring och affärsnytta.
+Projektet är utformat som ett praktiskt automationscase inom AI, automation, processförbättring och affärsnytta.
 
 **Implementationsnotering:** Första designmålet var **Power Automate** med **SharePoint/OneDrive**, **AI Builder** och/eller **Azure AI Document Intelligence**. Leverans end-to-end på Power Platform **var inte möjlig** i den tenant som användes i caset — se **Dokumentstatus** ovan. **Den levererade mjukvaran** är Python-pipelinen i detta repo, i linje med samma teman (spårbarhet, regler, manuell granskning vid osäkerhet, testbarhet).
 
@@ -467,7 +466,7 @@ Lösningen anses lyckad om den kan:
 - Upptäcka dubbletter med regler: **samma faktura-ID**, och/eller **samma leverantör + fakturadatum + totalbelopp** inom tolerans mot tidigare bearbetade poster i batchen *(referensimplementation i `process_invoice.py`)*
 - Logga beslut konsekvent i ett strukturerat format
 - Generera en daglig sammanfattning av bearbetningsutfall
-- Visa tydlig affärsnytta i en intervjusituation
+- Visa tydlig affärsnytta i en verksamhetsnära situation
 
 ---
 
@@ -487,7 +486,7 @@ Lösningen anses lyckad om den kan:
 - **Målbild:** flöde för daglig sammanfattning i Power Automate *(saknas i Python-MVP)*
 - Arkitekturdokumentation
 - Testmatris och testkörning
-- Berättelse redo för intervju som skiljer **avsikt (Power Platform)** från **referensbygge (Python)**
+- Berättelse redo för som skiljer **avsikt (Power Platform)** från **referensbygge (Python)**
 
 ### Utanför omfattning
 - Verklig ERP-integration
@@ -564,7 +563,7 @@ Lösningen ska upptäcka sannolika dubbletter med regler i linje med referensimp
 - **Primär:** samma **faktura-ID** (fakturanummer) som en tidigare bearbetad faktura i batchen
 - **Reserv:** samma **leverantör** + samma **fakturadatum** + samma **totalbelopp** (inom liten tolerans)
 
-*(En enklare kontroll ”leverantör + faktura-ID + belopp” mot en datalagerbakgrund är fortfarande en giltig intervjvariant; batch-Python-koden använder reglerna ovan.)*
+*(En enklare kontroll ”leverantör + faktura-ID + belopp” mot en datalagerbakgrund är fortfarande en giltig variant; batch-Python-koden använder reglerna ovan.)*
 
 ### FR7 — Detektering av misstänkta mönster
 Lösningen ska flagga misstänkta fakturor när:
@@ -587,7 +586,7 @@ Lösningen ska producera en daglig sammanfattning med antal per utfallskategori.
 ## 10. Icke-funktionella krav
 
 ### NFR1 — Förklarbarhet
-Flödet måste vara lätt att förklara i en intervju.
+Flödet måste vara lätt att förklara för tekniska och affärsmässiga intressenter.
 
 ### NFR2 — Spårbarhet
 Varje beslut ska ha en kopplad orsak.
@@ -752,7 +751,7 @@ Om belopp överstiger avvikelsetröskel:
 Om AI-extraktion inte alls är tillgänglig:
 - Simulera extraktion via förgenererad metadata
 - Fortsätt med dirigering, validering, loggning och granskningslogik
-- Var transparent i intervjun om vad som simulerats
+- Var transparent med vad som simulerats
 
 **Var alltid tydlig** med att **Power Automate-integration var avsikten** men **inte levererad** i detta repo; Python-koden är **referensimplementationen**.
 
@@ -768,7 +767,7 @@ Om AI-extraktion inte alls är tillgänglig:
 7. Arkitekturdokument *(PRD + `docs/` + `README.md`)*  
 8. Testmatris  
 9. Testresultat  
-10. Intervjupitch *(tydliggör avsikt vs. Python-leverans)*  
+10. Projektsammanfattning *(tydliggör avsikt vs. Python-leverans)*  
 
 ---
 
@@ -781,17 +780,17 @@ Om AI-extraktion inte alls är tillgänglig:
 - Resultat **loggas** till CSV (med spårbara orsaker)
 - **Testfall** har körts och dokumenterats
 - Dokumentation **säger uttryckligen** Power Platform-avsikt vs. Python-leverans
-- En koncis **intervjuberättelse** är färdig
+- En koncis projektberättelse är färdig
 
 **Full PRD ”klart” inklusive Power Automate** skulle dessutom kräva provisionerad tenant, flöden och daglig sammanfattning — **det ligger utanför det levererade repot**.
 
 ---
 
-## 20. Positionering i intervjun
-Projektet ska presenteras inte som ”en cool demo”, utan som:
+## 20. Operativ positionering
+Projektet ska positioneras som:
 - Ett affärsautomation-use-case
 - Ett realistiskt AP/ekonomiflöde
 - Ett exempel på kombinationen AI + automation + styrning (governance) + manuell granskning
 - Ett case utformat med skalbarhet och operativt resonemang i åtanke
 
-**Trovärdighetsrad:** *”Jag siktade på Power Automate och Microsoft-stacken för full integration, men tenanten hade inte SharePoint/OneDrive/AI Builder/Azure uppsatt som krävs — då levererade jag en Python-referenspipeline som visar samma historia intag → extraktion → validering → dirigering → mätning med ground truth.”*
+**Trovärdighetsrad:** *”Jag siktade på Power Automate och Microsoft-stacken för full integration, men tenanten hade inte SharePoint/OneDrive/AI Builder/Azure uppsatt som krävs, så jag levererade en Python-referenspipeline som visar samma modell: intag → extraktion → validering → dirigering → mätning med ground truth.”*
